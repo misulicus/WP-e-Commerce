@@ -2250,6 +2250,7 @@ body.edit-tags-php img.wpsc_category_image {
 .wpsc_metabox_live_title {
 	position: absolute;
 	right: 30px;
+	top: -30px;
 }
 
 .wpsc_metabox_live_title > * {
@@ -2260,6 +2261,25 @@ body.edit-tags-php img.wpsc_category_image {
 	font-size: 13px;
 	color: #858585;
 	text-shadow: 1px 1px #fff;
+}
+
+#wpsc_product_delivery_metabox_live_title,
+#wpsc_product_details_metabox_live_title {
+	top: -42px;
+	left: 170px;
+	right: auto;
+}
+
+#wpsc_product_details_metabox_live_title {
+	top: -39px;
+}
+
+#wpsc_product_price_metabox_live_title {
+	top: -34px;
+}
+
+#wpsc_product_stock_metabox_live_title {
+	top: -33px;
 }
 
 /**
