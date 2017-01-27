@@ -220,7 +220,7 @@ class WPSC_Tracking {
 		$data['email']              = get_option( 'admin_email' );
 		
 		// Theme info
-		$data['theme'] 				= self::get_theme_info();
+		$data['theme']              = self::get_theme_info();
 
 		// WordPress Info
 		$data['wp']                 = self::get_wordpress_info();
@@ -234,7 +234,7 @@ class WPSC_Tracking {
 		$data['inactive_plugins']   = $all_plugins['inactive_plugins'];
 
 		// WPEC Related Section
-		$data['wpec']				= self::get_wpec_info();
+		$data['wpec']               = self::get_wpec_info();
 
 		// Store count info
 		$data['users']              = self::get_user_counts();
