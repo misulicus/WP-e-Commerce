@@ -249,7 +249,7 @@ class WPSC_Tracking {
 		// Store count info
 		$data['users']              = self::get_user_counts();
 		$data['products']           = self::get_product_counts();
-		$data['orders']             = self::get_order_counts(); // TO check
+		$data['orders']             = self::get_order_counts();
 		
 		// Payment gateway info
 		$data['gateways']           = self::get_active_payment_gateways(); // TO check
@@ -386,12 +386,6 @@ class WPSC_Tracking {
 		$wpec_data['url']          = WPSC_URL;
 		$wpec_data['debug']        = WPSC_DEBUG;
 		
-		// Try and get WPEC install date.
-		if( function_exists( 'wpsc_get_the_post_id_by_shortcode' ) ) {
-			$checkout_page_id = wpsc_get_the_post_id_by_shortcode( '[shoppingcart]' );
-			$wpec_data['install_date'] = 0 !== $checkout_page_id ? get_post_field( 'post_date', $checkout_page_id ) : 'not set';			
-		}
-		
 		return $wpec_data;
 	}
 	
@@ -435,27 +429,19 @@ class WPSC_Tracking {
 		
 		$order_count      = array();
 		$curr_year        = date('Y');
+		
+		$result = $wpdb->get_row( "SELECT FROM_UNIXTIME( DATE,  '%Y' ) AS year FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE FROM_UNIXTIME( DATE,  '%Y' ) > 2000 AND processed IN ( 3, 4, 5 ) ORDER BY date ASC LIMIT 1 ", ARRAY_A );
+		$start_year = $result['year'];
+
+		if( $start_year ) {
+			while ( $start_year <= $curr_year ) {
+				$sql = $wpdb->prepare( "SELECT SUM(`totalprice`) as total, COUNT(*) as cnt FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE `processed` IN (3,4,5) AND `date` BETWEEN %s AND %s", mktime( 0, 0, 0, 1, 1, $start_year ), mktime( 23, 59, 59, 12, 31, $start_year ) );
+				$orders = $wpdb->get_row( $sql, ARRAY_A );
 				
-		// Total orders
-		$totalOrders = $wpdb->get_var( "SELECT COUNT(*) FROM `" . WPSC_TABLE_PURCHASE_LOGS . "`" );
-				
-		// Try and get the install year to get past totals
-		if( function_exists( 'wpsc_get_the_post_id_by_shortcode' ) ) {
-			$checkout_page_id = wpsc_get_the_post_id_by_shortcode( '[shoppingcart]' );
-			$install_date = 0 !== $checkout_page_id ? get_post_field( 'post_date', $checkout_page_id ) : false;
-			
-			if( $install_date ) {
-				$start_year = substr( $install_date, 0, 4 );
-			
-				while ( $start_year <= $curr_year ) {
-					$sql = $wpdb->prepare( "SELECT SUM(`totalprice`) as total, COUNT(*) as cnt FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE `processed` IN (3,4,5) AND `date` BETWEEN %s AND %s", mktime( 0, 0, 0, 1, 1, $start_year ), mktime( 23, 59, 59, 12, 31, $start_year ) );
-					$orders = $wpdb->get_row( $sql, ARRAY_A );
-					
-					if( $orders ) {
-						$order_count["{$start_year}"] = array( 'orders' => $orders['cnt'], 'total' => $orders['total'] );
-					}
-					$start_year ++;
+				if( $orders ) {
+					$order_count["{$start_year}"] = array( 'orders' => $orders['cnt'], 'total' => $orders['total'] );
 				}
+				$start_year ++;
 			}
 		}
 		
