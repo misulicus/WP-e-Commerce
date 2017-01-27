@@ -114,7 +114,7 @@ class WPSC_Tracking {
 		
 		$this->setup_data();
 		
-		$request = wp_remote_post( 'https://wpecommerce.org/?wpec_tracking_action=checkin', array(
+		$request = wp_remote_post( 'https://dev.devsource.co/?wpec_tracking_action=checkin', array(
 			'method'      => 'POST',
 			'timeout'     => 20,
 			'redirection' => 5,
@@ -190,8 +190,6 @@ class WPSC_Tracking {
 		}
 		
 		if (
-			stristr( network_site_url( '/' ), 'dev'       ) !== false ||
-			stristr( network_site_url( '/' ), 'localhost' ) !== false ||
 			stristr( network_site_url( '/' ), ':8888'     ) !== false // This is common with MAMP on OS X
 		) {
 			update_option( 'wpsc_usage_tracking_notice', '1' );
@@ -222,7 +220,7 @@ class WPSC_Tracking {
 		$data['email']              = get_option( 'admin_email' );
 		
 		// Theme info
-		$data['theme']              = self::get_theme_info();
+		$data['theme'] 				= self::get_theme_info();
 
 		// WordPress Info
 		$data['wp']                 = self::get_wordpress_info();
@@ -236,7 +234,7 @@ class WPSC_Tracking {
 		$data['inactive_plugins']   = $all_plugins['inactive_plugins'];
 
 		// WPEC Related Section
-		$data['wpec']               = self::get_wpec_info();
+		$data['wpec']				= self::get_wpec_info();
 
 		// Store count info
 		$data['users']              = self::get_user_counts();
@@ -439,16 +437,17 @@ class WPSC_Tracking {
 			if( $install_date ) {
 				$start_year = substr( $install_date, 0, 4 );
 			
-				while ( $start_year < $curr_year ) {
-					$order_count["year_{$start_year}"] = admin_display_total_price( mktime( 0, 0, 0, 1, 1, $start_year ), mktime( 23, 59, 59, 12, 31, $start_year ) );
+				while ( $start_year <= $curr_year ) {
+					$sql = $wpdb->prepare( "SELECT SUM(`totalprice`) as total, COUNT(*) as cnt FROM `".WPSC_TABLE_PURCHASE_LOGS."` WHERE `processed` IN (3,4,5) AND `date` BETWEEN %s AND %s", mktime( 0, 0, 0, 1, 1, $start_year ), mktime( 23, 59, 59, 12, 31, $start_year ) );
+					$orders = $wpdb->get_row( $sql, ARRAY_A );
+					
+					if( $orders ) {
+						$order_count["{$start_year}"] = array( 'orders' => $orders['cnt'], 'total' => $orders['total'] );
+					}
 					$start_year ++;
 				}
 			}
 		}
-		
-		// Curr year Totals
-		$order_count["year_{$curr_year}"] = admin_display_total_price( mktime( 0, 0, 0, 1, 1, $curr_year ), mktime( 23, 59, 59, 12, 31, $curr_year ) );
-		$order_count['total_orders'] = $totalOrders;
 		
 		$currency_data = WPSC_Countries::get_currency_data( get_option( 'currency_type' ), true );
 		$order_count['currency'] = $currency_data['code'];
