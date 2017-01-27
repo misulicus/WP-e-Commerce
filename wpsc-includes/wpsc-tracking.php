@@ -252,7 +252,7 @@ class WPSC_Tracking {
 		$data['orders']             = self::get_order_counts();
 		
 		// Payment gateway info
-		$data['gateways']           = self::get_active_payment_gateways(); // TO check
+		$data['gateways']           = self::get_active_payment_gateways();
 
 		// Shipping method info
 		$data['shipping_methods']   = self::get_active_shipping_methods();
@@ -466,6 +466,18 @@ class WPSC_Tracking {
 				foreach( $gateways as $id => $gateway ) {
 					$active_gateways['mv2'][ $id ] = array( 'title' => $gateway['name'] );
 				}
+			}
+		}
+		
+		// Merchant V3 gateways if any
+		$gateways = WPSC_Payment_Gateways::get_active_gateways();
+		
+		if( $gateways ) {
+			foreach( $gateways as $id => $gateway ) {
+				$meta = WPSC_Payment_Gateways::get_meta( $gateway );
+				$name = isset( $meta['name'] ) ? $meta['name'] : $meta['class'];
+				
+				$active_gateways['mv3'][ $id ] = array( 'title' => $name );
 			}
 		}
 		
