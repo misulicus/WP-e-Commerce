@@ -29,6 +29,13 @@ class WPSC_Tracking {
 	private $data;
 	
 	/**
+	 * Where we are sending the data to
+	 *
+	 * @access private
+	 */	
+	private $api_url = 'https://wpecommerce.org/';
+	
+	/**
 	 * Get things going
 	 *
 	 * @access public
@@ -98,9 +105,10 @@ class WPSC_Tracking {
 		$home_url = trailingslashit( home_url() );
 		
 		// Allows us to stop our own site from checking in, and a filter for our additional sites
-		if ( $home_url === 'https://wpecommerce.org/' || apply_filters( 'wpec_disable_tracking_checkin', false ) ) {
+		if ( true === apply_filters( 'wpec_disable_tracking_checkin', false ) ) {
 			return false;
 		}
+		
 		if( ! $this->tracking_allowed() && ! $override ) {
 			return false;
 		}
@@ -114,7 +122,7 @@ class WPSC_Tracking {
 		
 		$this->setup_data();
 		
-		$request = wp_remote_post( 'https://dev.devsource.co/?wpec_tracking_action=checkin', array(
+		$request = wp_remote_post( $this->api_url . '?wpec_tracking_action=checkin', array(
 			'method'      => 'POST',
 			'timeout'     => 20,
 			'redirection' => 5,
@@ -190,13 +198,15 @@ class WPSC_Tracking {
 		}
 		
 		if (
+			stristr( network_site_url( '/' ), 'dev'       ) !== false ||
+			stristr( network_site_url( '/' ), 'localhost' ) !== false ||
 			stristr( network_site_url( '/' ), ':8888'     ) !== false // This is common with MAMP on OS X
 		) {
 			update_option( 'wpsc_usage_tracking_notice', '1' );
 		} else {
 			$optin_url  = add_query_arg( 'wpec_tracking_action', 'opt_into_tracking' );
 			$optout_url = add_query_arg( 'wpec_tracking_action', 'opt_out_of_tracking' );
-			$extensions_url = 'https://wpecommerce.org/store/';
+			$extensions_url = $this->api_url . 'store/';
 			echo '<div class="updated"><p>';
 				echo sprintf( __( 'Allow WP eCommerce to track plugin usage? Opt-in to tracking and our newsletter and immediately be emailed a 20%s discount to the WPEC shop, valid towards the <a href="%s" target="_blank">purchase of extensions</a>. No sensitive data is tracked.', 'wp-e-commerce' ), '%', $extensions_url );
 				echo '&nbsp;<a href="' . esc_url( $optin_url ) . '" class="button-secondary">' . __( 'Allow', 'wp-e-commerce' ) . '</a>';
