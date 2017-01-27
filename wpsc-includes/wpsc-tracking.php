@@ -114,7 +114,7 @@ class WPSC_Tracking {
 		
 		$this->setup_data();
 		
-		$request = wp_remote_post( 'https://dev.devsource.co/?wpec_tracking_action=checkin', array(
+		$request = wp_remote_post( 'https://wpecommerce.org/?wpec_tracking_action=checkin', array(
 			'method'      => 'POST',
 			'timeout'     => 20,
 			'redirection' => 5,
@@ -190,6 +190,8 @@ class WPSC_Tracking {
 		}
 		
 		if (
+			stristr( network_site_url( '/' ), 'dev'       ) !== false ||
+			stristr( network_site_url( '/' ), 'localhost' ) !== false ||
 			stristr( network_site_url( '/' ), ':8888'     ) !== false // This is common with MAMP on OS X
 		) {
 			update_option( 'wpsc_usage_tracking_notice', '1' );
@@ -220,7 +222,7 @@ class WPSC_Tracking {
 		$data['email']              = get_option( 'admin_email' );
 		
 		// Theme info
-		$data['theme'] 				= self::get_theme_info();
+		$data['theme']              = self::get_theme_info();
 
 		// WordPress Info
 		$data['wp']                 = self::get_wordpress_info();
@@ -234,7 +236,7 @@ class WPSC_Tracking {
 		$data['inactive_plugins']   = $all_plugins['inactive_plugins'];
 
 		// WPEC Related Section
-		$data['wpec']				= self::get_wpec_info();
+		$data['wpec']               = self::get_wpec_info();
 
 		// Store count info
 		$data['users']              = self::get_user_counts();
@@ -249,9 +251,6 @@ class WPSC_Tracking {
 		
 		// Template overrides
 		$data['template_overrides'] = self::get_all_template_overrides();
-		
-		// Get all WP eCommerce options info
-		//$data['settings']           = self::get_all_woocommerce_options_values(); // TO DO ?
 		
 		$this->data = $data;
 	}
@@ -449,9 +448,7 @@ class WPSC_Tracking {
 		
 		// Curr year Totals
 		$order_count["year_{$curr_year}"] = admin_display_total_price( mktime( 0, 0, 0, 1, 1, $curr_year ), mktime( 23, 59, 59, 12, 31, $curr_year ) );
-		
 		$order_count['total_orders'] = $totalOrders;
-
 		
 		$currency_data = WPSC_Countries::get_currency_data( get_option( 'currency_type' ), true );
 		$order_count['currency'] = $currency_data['code'];
